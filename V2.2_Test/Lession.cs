@@ -13,6 +13,7 @@ namespace AspNetCore_Mvc
     public class C03{
         public static void Main_CreateDbIfNotExists(IWebHost host)
         {
+            /*Microsoft.Extensions.DependencyInjection*/
             using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
