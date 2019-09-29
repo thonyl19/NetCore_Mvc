@@ -72,29 +72,10 @@ namespace AspNetCore_Mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Title,ReleaseDate,Genre,Price,Rating")] Movie movie)
         {
-            if (id != movie.Id)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(movie);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!MovieExists(movie.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                _context.Add(movie);
+                await _context.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
             return View(movie);
