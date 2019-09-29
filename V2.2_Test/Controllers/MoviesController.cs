@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AspNetCore_Mvc.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace AspNetCore_Mvc.Controllers
@@ -17,16 +18,33 @@ namespace AspNetCore_Mvc.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string movieGenre, string searchString)
         {
-            var movies = from m in _context.Movie
-                    select m;
+            // Use LINQ to get list of genres.
+            IQueryable<string> genreQuery = from m in _context.Movie
+                                            orderby m.Genre
+                                            select m.Genre;
 
-            if (!String.IsNullOrEmpty(searchString)){
-                movies = movies.Where(m=>m.Title.Contains(searchString));
+            var movies = from m in _context.Movie
+                         select m;
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                movies = movies.Where(s => s.Title.Contains(searchString));
             }
 
-            return View(await movies.ToListAsync());
+            if (!string.IsNullOrEmpty(movieGenre))
+            {
+                movies = movies.Where(x => x.Genre == movieGenre);
+            }
+
+            var movieGenreVM = new MovieGenreViewModel
+            {
+                Genres = new SelectList(await genreQuery.Distinct().ToListAsync()),
+                Movies = await movies.ToListAsync()
+            };
+
+            return View(movieGenreVM);
         }
 
         [HttpPost]
@@ -34,7 +52,7 @@ namespace AspNetCore_Mvc.Controllers
         {
             return "From [HttpPost]Index: filter on " + searchString;
         }
- 
+
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -82,8 +100,9 @@ namespace AspNetCore_Mvc.Controllers
             return View(movie);
         }
 
-        bool MovieExists(int id){
-            return _context.Movie.Any(el=> el.Id == id);
+        bool MovieExists(int id)
+        {
+            return _context.Movie.Any(el => el.Id == id);
         }
 
         public async Task<ActionResult<IEnumerable<Movie>>> All()
